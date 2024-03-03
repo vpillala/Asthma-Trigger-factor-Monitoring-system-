@@ -1,0 +1,149 @@
+
+
+NodeMCU Code (nodemcu_code.ino):
+cpp
+Copy code
+// NodeMCU Code
+int id = 99;
+#include <SoftwareSerial.h>
+SoftwareSerial sw(2, 3); // RX, TX
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Interfacing Arduino with NodeMCU");
+  sw.begin(115200);
+}
+
+void loop() {
+  Serial.println("Sending data to NodeMCU");
+  int adc = analogRead(A0);
+
+  Serial.print("{\"sensorid\":");
+  Serial.print(id); // sensor id
+  Serial.print(",");
+  Serial.print("\"adcValue\":");
+  Serial.print(adc); // offset
+  Serial.print("}");
+  Serial.println();
+
+  sw.print("{\"sensorid\":");
+  sw.print(id); // sensor id
+  sw.print(",");
+  sw.print("\"adcValue\":");
+  sw.print(adc); // offset
+  sw.print("}");
+  sw.println();
+
+  delay(5000);
+}
+Digital Sensor Code (digital_sensor.ino):
+cpp
+Copy code
+// Digital Sensor Code
+int sensorValue;
+int digitalValue;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(13, OUTPUT);
+  pinMode(3, INPUT);
+}
+
+void loop() {
+  sensorValue = analogRead(0);
+  digitalValue = digitalRead(2);
+
+  if (sensorValue > 400) {
+    digitalWrite(13, HIGH);
+  } else {
+    digitalWrite(13, LOW);
+    Serial.println(sensorValue, DEC);
+    Serial.println(digitalValue, DEC);
+    delay(1000);
+  }
+}
+Pulse Oximeter Code (pulse_oximeter.ino):
+cpp
+Copy code
+// Pulse Oximeter Code
+#include <Wire.h>
+#include "MAX30100_PulseOximeter.h"
+
+#define REPORTING_PERIOD_MS 1000
+
+PulseOximeter pox;
+uint32_t tsLastReport = 0;
+
+void onBeatDetected() {
+    Serial.println("Beat!");
+}
+
+void setup() {
+    Serial.begin(115200);
+    Serial.print("Initializing pulse oximeter..");
+
+    if (!pox.begin()) {
+        Serial.println("FAILED");
+        for (;;);
+    } else {
+        Serial.println("SUCCESS");
+    }
+
+    pox.setIRLedCurrent(MAX30100_LED_CURR_7_6MA);
+    pox.setOnBeatDetectedCallback(onBeatDetected);
+}
+
+void loop() {
+    pox.update();
+
+    if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
+        Serial.print("Heart rate:");
+        Serial.print(pox.getHeartRate());
+        Serial.print("bpm / SpO2:");
+        Serial.print(pox.getSpO2());
+        Serial.println("%");
+
+        tsLastReport = millis();
+    }
+}
+BMP280 Sensor Code (bmp280_sensor.ino):
+cpp
+Copy code
+// BMP280 Sensor Code
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BMP280.h>
+
+Adafruit_BMP280 bmp; // I2C
+Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println(F("BMP280 Sensor event test"));
+
+  if (!bmp.begin()) {
+    Serial.println(F("Could not find a valid BMP280 sensor, check wiring or try a different address!"));
+    while (1) delay(10);
+  }
+
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL, Adafruit_BMP280::SAMPLING_X2,
+                  Adafruit_BMP280::SAMPLING_X16, Adafruit_BMP280::FILTER_X16,
+                  Adafruit_BMP280::STANDBY_MS_500);
+}
+
+void loop() {
+  sensors_event_t temp_event, pressure_event;
+  bmp_temp->getEvent(&temp_event);
+  bmp_pressure->getEvent(&pressure_event);
+
+  Serial.print(F("Temperature = "));
+  Serial.print(temp_event.temperature);
+  Serial.println(" *C");
+
+  Serial.print(F("Pressure = "));
+  Serial.print(pressure_event.pressure);
+  Serial.println(" hPa");
+
+  Serial.println();
+  delay(2000);
+}

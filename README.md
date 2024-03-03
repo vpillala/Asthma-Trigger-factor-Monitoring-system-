@@ -22,7 +22,7 @@ This repository contains the code and design files for an IoT-based perpetual mo
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/yourusername/asthma-monitoring-system.git
+    git clone https://github.com/vpillala/asthma-monitoring-system.git
     cd asthma-monitoring-system
     ```
 
